@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>js焦点轮播图</title>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+            text-decoration: none;
+        }
+
+        body {
+            padding: 20px;
+        }
+
+        #container {
+            width: 600px;
+            height: 400px;
+            border: 3px solid #333;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #list {
+            width: 4200px;
+            height: 400px;
+            position: absolute;
+            z-index: 1;
+        }
+
+        #list img {
+            float: left;
+        }
+
+        #buttons {
+            position: absolute;
+            height: 10px;
+            width: 100px;
+            z-index: 2;
+            bottom: 20px;
+            left: 250px;
+        }
+
+        #buttons span {
+            cursor: pointer;
+            float: left;
+            border: 1px solid #fff;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #333;
+            margin-right: 5px;
+        }
+
+        #buttons .on {
+            background: orangered;
+        }
+
+        .arrow {
+            cursor: pointer;
+            display: none;
+            line-height: 39px;
+            text-align: center;
+            font-size: 36px;
+            font-weight: bold;
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            z-index: 2;
+            top: 180px;
+            background-color: RGBA(0, 0, 0, .3);
+            color: #fff;
+        }
+
+        .arrow:hover {
+            background-color: RGBA(0, 0, 0, .7);
+        }
+
+        #container:hover .arrow {
+            display: block;
+        }
+
+        #prev {
+            left: 20px;
+        }
+
+        #next {
+            right: 20px;
+        }
+    </style>
+
+    <script text="type/javascript">
+        window.onload = function () { //当页面加载完毕之后才进行接下来的操作
+            var container = document.getElementById("container"); //获取整个容器
+            var list = document.getElementById("list"); //获取list元素
+            var buttons = document.getElementById("buttons").getElementsByTagName("span");//获取每一个小圆点按钮元素
+            var prev = document.getElementById("prev"); //获取左箭头元素
+            var next = document.getElementById("next"); //获取右箭头元素
+
+            var index = 1; //用来存放当前该显示第几个小圆点
+
+            var animated = false;//用于记录是否在做动画
+
+            var timer;//定义一个定时器用于自动切换
+
+            //小圆点切换函数：
+            function showButton() {
+                //先把之前亮起的小圆点变暗
+                for (var i = 0; i < buttons.length; i++) {
+                    if (buttons[i].className == "on") {
+                        buttons[i].className = "";
+                        break;
+                    }
+                }
+
+                //亮起新的小圆点。
+                buttons[index - 1].className = "on";
+            }
+
+
+
+
+            //切换图片函数：
+            function animate(offset) {
+                animated = true;
+                var newleft = parseInt(list.offsetLeft) + offset;
+
+                //以下用于实现移动图片的动画。
+                var timer = 300; //位移总时间
+                var interval = 10; //位移间隔时间
+                var speed = offset / (timer / interval); //每一次的位移量
+
+
+
+                function go() {
+                    if ((speed < 0 && parseInt(list.offsetLeft) > newleft) || (speed > 0 && parseInt(list.offsetLeft) < newleft)) {
+                        list.style.left = parseInt(list.offsetLeft) + speed + "px";
+                        setTimeout(go, interval);
+
+                    } else {
+                        animated = false;
+
+                        list.style.left = newleft + "px";
+
+                        //以下用于实现无限滚动
+                        if (newleft > -600) {
+                            list.style.left = -3000 + "px";
+                        }
+                        if (newleft < -3000) {
+                            list.style.left = -600 + "px";
+                        }
+                    }
+                }
+
+                go();//调用go()函数
+            }
+
+
+            //自动切换：
+            function play() {
+                timer = setInterval(function () {
+                    next.onclick();
+                }, 3000)
+            }
+
+            //当鼠标移动到图片上时，停止自动切换：
+            function stop() {
+                clearInterval(timer);
+            }
+
+            //点击右箭头切换图片
+            next.onclick = function () {  //点击右箭头触发该事件
+                index = index + 1;
+                if (index == 6) { //只有五张图，五个小圆点，第五个小圆点的下一个即为第一个小圆点
+                    index = 1;
+                }
+                showButton();//"切换小圆点"
+
+                if (animated == false) {
+                    animate(-600); //切换图片
+                }
+
+            }
+
+            //点击左箭头切换图片
+            prev.onclick = function () {  //点击左箭头触发该事件
+                index = index - 1;
+                if (index == 0) { //只有五张图，五个小圆点，第一个小圆点的上一个即为第五个小圆点
+                    index = 5;
+                }
+                showButton();//"切换小圆点"
+
+                if (animated == false) {
+                    animate(600);//切换图片
+                }
+            }
+
+
+            //点击小圆点按钮切换图片
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].onclick = function () {
+                    if (this.className == "on") { //如果点击亮起的小圆点按钮，则直接return，不用做任何事情
+                        return;
+                    }
+                    var myIndex = parseInt(this.getAttribute("index"));//获取自定义属性index的值（当前点击的小圆点）
+                    var offset = -600 * (myIndex - index);  //计算偏移量
+
+                    if (animated == false) {
+                        animate(offset); //进行图片切换
+                    }
+
+                    index = myIndex; //将新的myIndex赋值给index
+                    showButton();//"切换小圆点"
+                }
+            }
+
+
+            play(); //一开始时是自动播放
+
+            container.onmouseover = stop; //鼠标移动到图片上停止自动切换图片
+            container.onmouseout = play; //鼠标离开图片继续自动切换图片
+
+        }
+    </script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="list" style="left: -600px;">
+            <img src="img/5.jpg" alt="1" />
+            <img src="img/1.jpg" alt="1" />
+            <img src="img/2.jpg" alt="2" />
+            <img src="img/3.jpg" alt="3" />
+            <img src="img/4.jpg" alt="4" />
+            <img src="img/5.jpg" alt="5" />
+            <img src="img/1.jpg" alt="5" />
+        </div>
+        <div id="buttons">
+            <span index="1" class="on"></span>
+            <span index="2"></span>
+            <span index="3"></span>
+            <span index="4"></span>
+            <span index="5"></span>
+        </div>
+        <a href="javascript:;" id="prev" class="arrow">&lt;</a>
+        <a href="javascript:;" id="next" class="arrow">&gt;</a>
+    </div>
+</body>
+
+</html>
